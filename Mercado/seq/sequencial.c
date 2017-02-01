@@ -27,16 +27,16 @@ void atendeCliente(int rank) {
 		clientesAtendidos, filas[rank]);
 }
 
-int filasVazias() {
-	for (int i = 1; i <= numCaixas; i++)
-		if (filas[i] > 0) return -1;
-	return 1;
-}
-
 void printFilasCaixas() {
 	for (int i = 1; i <= numCaixas; i++)
 		printf("Fila do Caixa %d esta com %d clientes\n", i, filas[i]);
 	printf("\n");
+}
+
+int filasVazias() {
+	for (int i = 1; i <= numCaixas; i++)
+		if (filas[i] > 0) return -1;
+	return 1;
 }
 
 void inicializaFilas() {
@@ -123,9 +123,10 @@ int main(int argc, char **argv) {
 	printf("Tempo de Atendimento %lus\n", tempoAtendimento);
 	printf("Abrindo Mercado...\n\n");
 
-	while (numClientesAtual > 0 && filasVazias())
+	while (numClientesAtual > 0 || filasVazias() < 0) {
 		for (int i = 0; i < numCaixas + 1; i++) 
 				logicaMercado(i);
+	}
 
 	printf("Tempo Execucao %llus\n", time(NULL) - tempoExecucao);
 	return 0;

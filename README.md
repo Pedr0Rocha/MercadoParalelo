@@ -1,2 +1,5 @@
-# MercadoParalelo
-Implementação de um Produtor Consumidor Paralelo usando MPI
+# Produtor Consumidor Paralelo
+Implementação de Produtor Consumidor Paralelo usando MPI
+
+#### Mercado
+#### Montanha Russa
