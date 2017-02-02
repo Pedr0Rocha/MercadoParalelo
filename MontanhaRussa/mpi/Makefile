@@ -3,4 +3,4 @@ ALL:
 clear:
 	rm mpi
 run:
-	mpirun -n 5 ./mpi -c 600 -t 3
+	mpirun -n 5 -hostfile ./hostfile.txt ./mpi -c 600 -t 3
