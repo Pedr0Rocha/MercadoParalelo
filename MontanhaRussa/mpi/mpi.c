@@ -14,12 +14,11 @@ long tempoPasseio;
 int numPasseios;
 
 int lugaresOcupados;
-int numeroPortasCarrinho = 4;
 long tempoEntrarCarrinho = 2;
 
 int ultimoPassageiro = 1;
 
-void subirCarrinho(int rank) {
+void subirCarrinho() {
 	sleep(tempoEntrarCarrinho);
 }
 
@@ -43,31 +42,21 @@ void logicaMontanhaRussa(int rank) {
 			while (!podeComecarPasseio()) {
 				int passageiro;
 				MPI_Recv(&passageiro, 1, MPI_INT, passageiroAtual, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-				printf("Passageiro %d subiu no carrinho - Capacidade do Carrinho %d\n", passageiro, capacidadeCarrinho - lugaresOcupados);
 				passageiroAtual++;
 				lugaresOcupados++;
+				printf("\nPassageiro %d subiu no carrinho - Capacidade do Carrinho %d\n", passageiro, capacidadeCarrinho - lugaresOcupados);
 				if (passageiroAtual > numPassageiros)
 					passageiroAtual = 1;
 			}
 			comecarPasseio();
 			ultimoPassageiro = passageiroAtual;
-
-			int voltaCompleta = 1;
-			int carrinhoFechado = -1;
-			for (int i = 1; i < numPassageiros; i++)
-				if (numPasseios - 1 == 0)
-					MPI_Send(&carrinhoFechado, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-				else
-					MPI_Send(&voltaCompleta, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
 		}
 	} else {
 		int carrinhoAberto = 1;
 		while (carrinhoAberto) {
-			printf("Passageiro %d esperando para entrar no carrinho..\n");
+			printf("Passageiro %d na fila para entrar no carrinho..\n", rank);
 			subirCarrinho();
 			MPI_Send(&rank, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-
-			MPI_Recv(&carrinhoAberto, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 	}
 }
@@ -115,13 +104,26 @@ int main(int argc, char **argv) {
 
 	lugaresOcupados = 0;
 	numPassageiros = totalRanks - 1;
-	printf("Numero de Passageiros %d\n", numPassageiros);
-	printf("Capacidade do Carrinho %d\n", capacidadeCarrinho);
-	printf("Numero de Passeios %d\n", numPasseios);
-	printf("Tempo de Passeio %lus\n\n", tempoPasseio);
+
+	if (capacidadeCarrinho > numPassageiros) {
+		printf("Capacidade do Carrinho é maior do que o número de passageiros\n");
+		exit(0);
+	}
+
+	if (rank == CARRINHO) {
+		printf("Numero de Passageiros %d\n", numPassageiros);
+		printf("Capacidade do Carrinho %d\n", capacidadeCarrinho);
+		printf("Numero de Passeios %d\n", numPasseios);
+		printf("Tempo de Passeio %lus\n\n", tempoPasseio);
+	}
 
 	logicaMontanhaRussa(rank);
 
-	printf("Tempo Execucao %llus\n", time(NULL) - tempoExecucao);
+	if (rank == CARRINHO) {
+		printf("\n\nTodos os passeios foram realizados, Montanha Russa fechada\n");
+		printf("Tempo Execucao %llus\n", time(NULL) - tempoExecucao);
+		MPI_Abort(MPI_COMM_WORLD, 0);
+	}
+	MPI_Finalize();
 	return 0;
 }
